@@ -22,6 +22,7 @@ body {
   min-height: 100vh;
   text-rendering: optimizeSpeed;
   line-height: 1.5;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
 }
 
 a:not([class]) {
@@ -81,24 +82,52 @@ select {
 }
 
 .container {
-  max-width: 800px;
-  padding-inline: 2rem;
+  width: min(100% - 2rem, 55rem);
   margin-inline: auto;
 }
 
 /******styling******/
-.primary-nav {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
 
-.primary-nav > ul {
-  list-style: none;
-  display: flex;
+.game-board {
+  aspect-ratio: 1 / 1;
+  width: 100%;
+  max-width: 500px;
+  margin-inline: auto;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
   gap: 1rem;
 }
 
-.primary-nav a {
-  text-decoration: none;
+.cell {
+  cursor: pointer;
+  aspect-ratio: 1 / 1;
+  width: 100%;
+  line-height: 1;
+  font-size: 4rem;
+  font-weight: bold;
+  border: 1px solid black;
+  padding: 1.5rem;
+  border-radius: 5px;
+  background-color: white;
+}
+
+.cell[data-marker='X'] {
+  color: red;
+}
+
+.cell[data-marker='X']::before {
+  content: 'X';
+}
+
+.cell[data-marker='O'] {
+  color: blue;
+}
+
+.cell[data-marker='O']::before {
+  content: 'O';
+}
+
+.cell:hover {
+  background-color: lightgray;
 }
