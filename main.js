@@ -28,35 +28,58 @@ function player(name, marker) {
 
 //updatuje boardState při položení markeru a ověřuje legalitu tahu
 const gameBoard = (function () {
-  const _boardState = ['X', 'X', 'X', '', '', '', 'O', 'O', ''];
+  const _boardState = ['', '', '', '', '', '', '', '', ''];
 
   function getBoardState() {
     return _boardState;
   }
 
   function placeMarker(marker, cell) {
-    if (isLegalMove(cell)) {
-      cell.setAttribute('data-marker', marker);
-      _boardState[cell.dataset.cellid] = marker;
-    }
-
-    return;
+    _boardState[cell.dataset.cellid] = marker;
   }
 
-  function isLegalMove(cell) {}
+  function isLegalMove(cell) {
+    return gameBoard.getBoardState()[cell.dataset.cellid] === '';
+  }
 
   return {
     getBoardState,
     placeMarker,
+    isLegalMove,
   };
 })();
 
 //výměna hráčů po každém kole, stará se o odehrání kola, kontroluje výhru
 const game = (function () {
-  const currentPlayer = player('Marek', 'X');
+  const player1 = player('Marek', 'X');
+  const player2 = player('Pepa', 'O');
+  let currentPlayer = player1;
 
   function playRound(cell) {
+    if (!gameBoard.isLegalMove(cell)) return;
+
     gameBoard.placeMarker(currentPlayer.getMarker(), cell);
+
+    currentPlayer = currentPlayer === player1 ? player2 : player1;
+  }
+
+  function checkWin() {
+    const winCombinations = [
+      [0, 1, 2],
+      [3, 4, 5],
+      [6, 7, 8],
+      [0, 3, 6],
+      [1, 4, 7],
+      [2, 5, 8],
+      [0, 4, 7],
+      [2, 4, 6],
+    ];
+
+    for (const winCombination of winCombinations) {
+      for (const position of winCombination) {
+        //check for win
+      }
+    }
   }
 
   return {
@@ -66,27 +89,28 @@ const game = (function () {
 
 //aktualizuje co vidí hráči, pracuje s aktivitou při kliknutí
 const screenController = (function () {
-  const boardCells = document.querySelectorAll('.cell'); //provizorní
-
   function updateScreen(boardCells) {
     boardCells.forEach((cell, index) => {
-      cell.setAttribute('data-marker', gameBoard.getBoardState()[index]);
+      cell.dataset.marker = gameBoard.getBoardState()[index];
     });
   }
 
   function handleClick(cell) {
     game.playRound(cell);
-    updateScreen(boardCells);
   }
 
   return {
     handleClick,
+    updateScreen,
   };
 })();
 
-// const boardCells = document.querySelectorAll('.cell');
+const boardCells = document.querySelectorAll('.cell');
 
-// boardCells.forEach((cell) => {
-//   console.log(cell.dataset.cellid);
-// });
+boardCells.forEach((cell) =>
+  cell.addEventListener('click', () => {
+    screenController.handleClick(cell);
+    screenController.updateScreen(boardCells);
+  })
+);
 
