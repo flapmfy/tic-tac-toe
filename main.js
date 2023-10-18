@@ -1,6 +1,7 @@
 function player(name, marker) {
   let _name = name;
   let _marker = marker;
+  let _score = 0;
 
   function getMarker() {
     return _marker;
@@ -18,17 +19,26 @@ function player(name, marker) {
     _name = newName;
   }
 
+  function upScore() {
+    _score++;
+  }
+
+  function resetScore() {
+    _score = 0;
+  }
+
   return {
     getMarker,
+    setMarker,
     getName,
     setName,
-    setMarker,
+    upScore,
+    resetScore,
   };
 }
 
-//updatuje boardState při položení markeru a ověřuje legalitu tahu
 const gameBoard = (function () {
-  const _boardState = ['', '', '', '', '', '', '', '', ''];
+  let _boardState = ['', '', '', '', '', '', '', '', ''];
 
   function getBoardState() {
     return _boardState;
@@ -39,31 +49,50 @@ const gameBoard = (function () {
   }
 
   function isLegalMove(cell) {
-    return gameBoard.getBoardState()[cell.dataset.cellid] === '';
+    return _boardState[cell.dataset.cellid] === '';
+  }
+
+  function clearState() {
+    _boardState = ['', '', '', '', '', '', '', '', ''];
   }
 
   return {
     getBoardState,
     placeMarker,
     isLegalMove,
+    clearState,
   };
 })();
 
-//výměna hráčů po každém kole, stará se o odehrání kola, kontroluje výhru
 const game = (function () {
-  const player1 = player('Marek', 'X');
-  const player2 = player('Pepa', 'O');
-  let currentPlayer = player1;
+  let _round = 0;
+  let _winner;
+  const _players = {
+    player1: player('Xs player', 'X'),
+    player2: player('Os player', 'O'),
+  };
+  let _currentPlayer = _players.player1;
 
   function playRound(cell) {
     if (!gameBoard.isLegalMove(cell)) return;
 
-    gameBoard.placeMarker(currentPlayer.getMarker(), cell);
+    _round++;
+    gameBoard.placeMarker(_currentPlayer.getMarker(), cell);
 
-    currentPlayer = currentPlayer === player1 ? player2 : player1;
+    if (checkWin(_currentPlayer, gameBoard.getBoardState())) {
+      _winner = _currentPlayer;
+      _winner.upScore();
+      console.log(_winner.getName());
+    } else if (!checkWin(_currentPlayer, gameBoard.getBoardState()) && _round === 9) {
+      _winner = 'draw';
+      console.log('draw');
+    }
+
+    _currentPlayer = _currentPlayer === _players.player1 ? _players.player2 : _players.player1;
   }
 
-  function checkWin() {
+  function checkWin(currentPlayer, boardState) {
+    let winCombo = 0;
     const winCombinations = [
       [0, 1, 2],
       [3, 4, 5],
@@ -76,23 +105,56 @@ const game = (function () {
     ];
 
     for (const winCombination of winCombinations) {
+      winCombo = 0;
+
       for (const position of winCombination) {
-        //check for win
+        if (boardState[position] === currentPlayer.getMarker()) {
+          winCombo++;
+        } else {
+          break;
+        }
+
+        if (winCombo === 3) {
+          return true;
+        }
       }
     }
+    return false;
+  }
+
+  function resetGame() {
+    gameBoard.clearState();
+    _currentPlayer = _players.player1;
+    _winner = '';
+    _round = 0;
+  }
+
+  function getWinner() {
+    return _winner;
   }
 
   return {
     playRound,
+    getWinner,
+    resetGame,
   };
 })();
 
-//aktualizuje co vidí hráči, pracuje s aktivitou při kliknutí
 const screenController = (function () {
   function updateScreen(boardCells) {
     boardCells.forEach((cell, index) => {
       cell.dataset.marker = gameBoard.getBoardState()[index];
     });
+
+    if (game.getWinner()) {
+      game.resetGame();
+
+      setTimeout(() => {
+        boardCells.forEach((cell, index) => {
+          cell.dataset.marker = gameBoard.getBoardState()[index];
+        });
+      }, 1000);
+    }
   }
 
   function handleClick(cell) {
@@ -105,6 +167,7 @@ const screenController = (function () {
   };
 })();
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////
 const boardCells = document.querySelectorAll('.cell');
 
 boardCells.forEach((cell) =>
