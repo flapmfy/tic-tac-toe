@@ -92,7 +92,7 @@ const game = (function () {
   }
 
   function checkWin(currentPlayer, boardState) {
-    let winCombo = 0;
+    let winningCellsCount = 0;
     const winCombinations = [
       [0, 1, 2],
       [3, 4, 5],
@@ -100,21 +100,21 @@ const game = (function () {
       [0, 3, 6],
       [1, 4, 7],
       [2, 5, 8],
-      [0, 4, 7],
+      [0, 4, 8],
       [2, 4, 6],
     ];
 
     for (const winCombination of winCombinations) {
-      winCombo = 0;
+      winningCellsCount = 0;
 
       for (const position of winCombination) {
         if (boardState[position] === currentPlayer.getMarker()) {
-          winCombo++;
+          winningCellsCount++;
         } else {
           break;
         }
 
-        if (winCombo === 3) {
+        if (winningCellsCount === 3) {
           return true;
         }
       }
@@ -133,9 +133,14 @@ const game = (function () {
     return _winner;
   }
 
+  function getCurrentPlayer() {
+    return _currentPlayer;
+  }
+
   return {
     playRound,
     getWinner,
+    getCurrentPlayer,
     resetGame,
   };
 })();
@@ -144,6 +149,7 @@ const screenController = (function () {
   function updateScreen(boardCells) {
     boardCells.forEach((cell, index) => {
       cell.dataset.marker = gameBoard.getBoardState()[index];
+      cell.dataset.currentmarker = game.getCurrentPlayer().getMarker();
     });
 
     if (game.getWinner()) {
@@ -152,6 +158,7 @@ const screenController = (function () {
       setTimeout(() => {
         boardCells.forEach((cell, index) => {
           cell.dataset.marker = gameBoard.getBoardState()[index];
+          cell.dataset.currentmarker = game.getCurrentPlayer().getMarker();
         });
       }, 1000);
     }

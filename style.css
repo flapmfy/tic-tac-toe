@@ -110,6 +110,15 @@ select {
   padding: 1.5rem;
   border-radius: 5px;
   background-color: white;
+  transition: all 100ms ease-in-out;
+}
+
+.cell[data-marker='']:active {
+  scale: 0.9;
+}
+
+.cell[data-marker='']:hover {
+  background-color: rgb(240, 240, 240);
 }
 
 .cell[data-marker='X'] {
@@ -128,6 +137,12 @@ select {
   content: 'O';
 }
 
-.cell:hover {
-  background-color: lightgray;
+[data-marker=''][data-currentmarker='X']:hover::before {
+  content: 'X';
+  color: lightcoral;
+}
+
+[data-marker=''][data-currentmarker='O']:hover::before {
+  content: 'O';
+  color: lightblue;
 }
