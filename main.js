@@ -1,3 +1,4 @@
+//****************************************player module****************************************//
 function player(name, marker) {
   let _name = name;
   let _marker = marker;
@@ -27,6 +28,10 @@ function player(name, marker) {
     _score = 0;
   }
 
+  function getScore() {
+    return _score;
+  }
+
   return {
     getMarker,
     setMarker,
@@ -34,9 +39,11 @@ function player(name, marker) {
     setName,
     upScore,
     resetScore,
+    getScore,
   };
 }
 
+//****************************************board module****************************************//
 const gameBoard = (function () {
   let _boardState = ['', '', '', '', '', '', '', '', ''];
 
@@ -44,12 +51,12 @@ const gameBoard = (function () {
     return _boardState;
   }
 
-  function placeMarker(marker, cell) {
-    _boardState[cell.dataset.cellid] = marker;
+  function placeMarker(marker, cellId) {
+    _boardState[cellId] = marker;
   }
 
-  function isLegalMove(cell) {
-    return _boardState[cell.dataset.cellid] === '';
+  function isLegalMove(cellId) {
+    return _boardState[cellId] === '';
   }
 
   function clearState() {
@@ -64,34 +71,46 @@ const gameBoard = (function () {
   };
 })();
 
+//****************************************game module****************************************//
 const game = (function () {
   let _round = 0;
   let _winner;
   const _players = {
-    player1: player('Xs player', 'X'),
-    player2: player('Os player', 'O'),
+    player1: player('X - player', 'X'),
+    player2: player('O - player', 'O'),
   };
-  let _currentPlayer = _players.player1;
+  let _currentPlayer = _players.player1.getMarker() === 'X' ? _players.player1 : _players.player2;
 
-  function playRound(cell) {
-    if (!gameBoard.isLegalMove(cell)) return;
+  function playRound(cellId) {
+    if (!gameBoard.isLegalMove(cellId)) return;
 
     _round++;
-    gameBoard.placeMarker(_currentPlayer.getMarker(), cell);
+    gameBoard.placeMarker(_currentPlayer.getMarker(), cellId);
 
-    if (checkWin(_currentPlayer, gameBoard.getBoardState())) {
-      _winner = _currentPlayer;
-      _winner.upScore();
-      console.log(_winner.getName());
-    } else if (!checkWin(_currentPlayer, gameBoard.getBoardState()) && _round === 9) {
+    //will be probably reworked
+    if (checkWin(gameBoard.getBoardState())) {
+      _winner = _currentPlayer.getName();
+      _currentPlayer.upScore();
+      console.log(`${_winner} wins the round! Current score: ${_currentPlayer.getScore()}`); //will be deleted
+    } else if (!checkWin(gameBoard.getBoardState()) && _round === 9) {
       _winner = 'draw';
-      console.log('draw');
+      console.log('draw'); //will be deleted
     }
 
     _currentPlayer = _currentPlayer === _players.player1 ? _players.player2 : _players.player1;
   }
 
-  function checkWin(currentPlayer, boardState) {
+  function getBestMove() {
+    let randomMove = 0;
+
+    do {
+      randomMove = Math.floor(Math.random() * 9);
+    } while (!gameBoard.isLegalMove(randomMove));
+
+    return randomMove;
+  }
+
+  function checkWin(boardState) {
     let winningCellsCount = 0;
     const winCombinations = [
       [0, 1, 2],
@@ -108,7 +127,7 @@ const game = (function () {
       winningCellsCount = 0;
 
       for (const position of winCombination) {
-        if (boardState[position] === currentPlayer.getMarker()) {
+        if (boardState[position] === _currentPlayer.getMarker()) {
           winningCellsCount++;
         } else {
           break;
@@ -122,11 +141,17 @@ const game = (function () {
     return false;
   }
 
+  function isCurrentPlayerBot() {
+    return _currentPlayer.getName().includes('bot');
+  }
+
   function resetGame() {
     gameBoard.clearState();
-    _currentPlayer = _players.player1;
+    _currentPlayer = _players.player1.getMarker() === 'X' ? _players.player1 : _players.player2;
     _winner = '';
     _round = 0;
+
+    screenController.aiMakeMove();
   }
 
   function getWinner() {
@@ -142,20 +167,53 @@ const game = (function () {
     getWinner,
     getCurrentPlayer,
     resetGame,
+    isCurrentPlayerBot,
+    getBestMove,
   };
 })();
 
+//****************************************screenController module****************************************//
 const screenController = (function () {
-  function updateScreen(boardCells) {
+  const boardCells = document.querySelectorAll('.cell');
+
+  boardCells.forEach((cell) =>
+    cell.addEventListener('click', () => {
+      if (game.isCurrentPlayerBot()) return;
+      handleCellChange(cell.dataset.cellid);
+
+      setTimeout(() => {
+        aiMakeMove();
+      }, 500);
+    })
+  );
+
+  function aiMakeMove() {
+    if (game.getWinner() || !game.isCurrentPlayerBot()) return;
+    const cellId = game.getBestMove();
+
+    handleCellChange(cellId);
+  }
+
+  function handleCellChange(cellId) {
+    game.playRound(cellId);
+    updateScreen();
+  }
+
+  function updateScreen() {
     boardCells.forEach((cell, index) => {
       cell.dataset.marker = gameBoard.getBoardState()[index];
-      cell.dataset.currentmarker = game.getCurrentPlayer().getMarker();
+
+      if (!game.isCurrentPlayerBot()) {
+        cell.dataset.currentmarker = game.getCurrentPlayer().getMarker();
+      } else {
+        cell.dataset.currentmarker = '';
+      }
     });
 
     if (game.getWinner()) {
-      game.resetGame();
-
       setTimeout(() => {
+        game.resetGame();
+
         boardCells.forEach((cell, index) => {
           cell.dataset.marker = gameBoard.getBoardState()[index];
           cell.dataset.currentmarker = game.getCurrentPlayer().getMarker();
@@ -164,23 +222,14 @@ const screenController = (function () {
     }
   }
 
-  function handleClick(cell) {
-    game.playRound(cell);
-  }
-
   return {
-    handleClick,
-    updateScreen,
+    aiMakeMove,
   };
 })();
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
-const boardCells = document.querySelectorAll('.cell');
 
-boardCells.forEach((cell) =>
-  cell.addEventListener('click', () => {
-    screenController.handleClick(cell);
-    screenController.updateScreen(boardCells);
-  })
-);
+if (game.isCurrentPlayerBot()) {
+  screenController.aiMakeMove();
+}
 
