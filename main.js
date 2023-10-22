@@ -76,43 +76,30 @@ const game = (function () {
   let _round = 0;
   let _winner;
   const _players = {
-    player1: player('X - player', 'X'),
+    player1: player('X - bot', 'X'),
     player2: player('O - player', 'O'),
   };
   let _currentPlayer = _players.player1.getMarker() === 'X' ? _players.player1 : _players.player2;
 
   function playRound(cellId) {
     if (!gameBoard.isLegalMove(cellId)) return;
-
     _round++;
     gameBoard.placeMarker(_currentPlayer.getMarker(), cellId);
 
-    //will be probably reworked
-    if (checkWin(gameBoard.getBoardState())) {
-      _winner = _currentPlayer.getName();
-      _currentPlayer.upScore();
-      console.log(`${_winner} wins the round! Current score: ${_currentPlayer.getScore()}`); //will be deleted
-    } else if (!checkWin(gameBoard.getBoardState()) && _round === 9) {
-      _winner = 'draw';
-      console.log('draw'); //will be deleted
+    if (checkWin()) {
+      handleWin();
+    } else if (!checkWin() && _round === 9) {
+      handleDraw();
     }
 
     _currentPlayer = _currentPlayer === _players.player1 ? _players.player2 : _players.player1;
   }
 
-  function getBestMove() {
-    let randomMove = 0;
-
-    do {
-      randomMove = Math.floor(Math.random() * 9);
-    } while (!gameBoard.isLegalMove(randomMove));
-
-    return randomMove;
-  }
-
-  function checkWin(boardState) {
+  function checkWin() {
+    if (_round < 5) return;
     let winningCellsCount = 0;
-    const winCombinations = [
+    const boardState = gameBoard.getBoardState();
+    const WIN_COMBINATIONS = [
       [0, 1, 2],
       [3, 4, 5],
       [6, 7, 8],
@@ -123,7 +110,7 @@ const game = (function () {
       [2, 4, 6],
     ];
 
-    for (const winCombination of winCombinations) {
+    for (const winCombination of WIN_COMBINATIONS) {
       winningCellsCount = 0;
 
       for (const position of winCombination) {
@@ -141,6 +128,36 @@ const game = (function () {
     return false;
   }
 
+  function handleWin() {
+    _winner = _currentPlayer.getName();
+    _currentPlayer.upScore();
+    console.log(`${_winner} wins the round! Current score: ${_currentPlayer.getScore()}`); //will be deleted
+  }
+
+  function handleDraw() {
+    _winner = 'draw';
+    console.log('draw'); //will be deleted
+  }
+
+  function getBestMove() {
+    let randomMove = 0;
+
+    do {
+      randomMove = Math.floor(Math.random() * 9);
+    } while (!gameBoard.isLegalMove(randomMove));
+
+    return randomMove;
+  }
+
+  function aiMakeMove() {
+    if (getWinner() || !isCurrentPlayerBot()) return;
+    const cellId = getBestMove();
+
+    setTimeout(() => {
+      screenController.handleCellChange(cellId);
+    }, 500);
+  }
+
   function isCurrentPlayerBot() {
     return _currentPlayer.getName().includes('bot');
   }
@@ -151,7 +168,7 @@ const game = (function () {
     _winner = '';
     _round = 0;
 
-    screenController.aiMakeMove();
+    aiMakeMove();
   }
 
   function getWinner() {
@@ -169,6 +186,7 @@ const game = (function () {
     resetGame,
     isCurrentPlayerBot,
     getBestMove,
+    aiMakeMove,
   };
 })();
 
@@ -180,19 +198,9 @@ const screenController = (function () {
     cell.addEventListener('click', () => {
       if (game.isCurrentPlayerBot()) return;
       handleCellChange(cell.dataset.cellid);
-
-      setTimeout(() => {
-        aiMakeMove();
-      }, 500);
+      game.aiMakeMove();
     })
   );
-
-  function aiMakeMove() {
-    if (game.getWinner() || !game.isCurrentPlayerBot()) return;
-    const cellId = game.getBestMove();
-
-    handleCellChange(cellId);
-  }
 
   function handleCellChange(cellId) {
     game.playRound(cellId);
@@ -211,6 +219,7 @@ const screenController = (function () {
     });
 
     if (game.getWinner()) {
+      //zde se bude zapínat popup místo opakovaného resetu hry
       setTimeout(() => {
         game.resetGame();
 
@@ -223,13 +232,13 @@ const screenController = (function () {
   }
 
   return {
-    aiMakeMove,
+    handleCellChange,
   };
 })();
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
 if (game.isCurrentPlayerBot()) {
-  screenController.aiMakeMove();
+  game.aiMakeMove();
 }
 
