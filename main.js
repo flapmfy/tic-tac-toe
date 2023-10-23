@@ -228,33 +228,48 @@ const screenController = (function () {
     });
 
     if (game.getWinner()) {
-      boardCells.forEach((cell) => {
-        if (game.getWinningCells().includes(+cell.dataset.cellid)) {
-          cell.classList.add('winning-cell');
-        }
-      });
-
-      //zde se bude zapínat popup místo opakovaného resetu hry
-      setTimeout(() => {
-        game.resetGame();
-
-        boardCells.forEach((cell, index) => {
-          cell.dataset.marker = gameBoard.getBoardState()[index];
-          cell.dataset.currentmarker = game.getCurrentPlayer().getMarker();
-          cell.classList.remove('winning-cell');
-        });
-      }, 1500);
+      restartGame();
     }
+  }
+
+  function restartGame() {
+    boardCells.forEach((cell) => {
+      if (game.getWinningCells().includes(+cell.dataset.cellid)) {
+        cell.classList.add('winning-cell');
+      }
+    });
+
+    //zde se bude zapínat popup místo opakovaného resetu hry
+    setTimeout(() => {
+      game.resetGame();
+
+      boardCells.forEach((cell, index) => {
+        cell.dataset.marker = gameBoard.getBoardState()[index];
+
+        if (!game.isCurrentPlayerBot()) {
+          cell.dataset.currentmarker = game.getCurrentPlayer().getMarker();
+        } else {
+          cell.dataset.currentmarker = '';
+        }
+
+        cell.classList.remove('winning-cell');
+      });
+    }, 1500);
   }
 
   return {
     handleCellChange,
+    updateScreen,
   };
 })();
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
-if (game.isCurrentPlayerBot()) {
-  game.aiMakeMove();
-}
+document.addEventListener('DOMContentLoaded', () => {
+  screenController.updateScreen();
+
+  if (game.isCurrentPlayerBot()) {
+    game.aiMakeMove();
+  }
+});
 

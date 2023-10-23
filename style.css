@@ -110,7 +110,7 @@ select {
   padding: 1.5rem;
   border-radius: 5px;
   background-color: white;
-  transition: all 100ms ease-in-out;
+  transition: scale 75ms ease-in-out, background-color 150ms ease-in;
 }
 
 .cell[data-marker='']:active {
