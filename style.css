@@ -146,3 +146,7 @@ select {
   content: 'O';
   color: lightblue;
 }
+
+.winning-cell {
+  background-color: rgb(254, 254, 93);
+}

@@ -73,6 +73,7 @@ const gameBoard = (function () {
 
 //****************************************game module****************************************//
 const game = (function () {
+  let winningCells = [];
   let _round = 0;
   let _winner;
   const _players = {
@@ -121,6 +122,7 @@ const game = (function () {
         }
 
         if (winningCellsCount === 3) {
+          winningCells = winCombination;
           return true;
         }
       }
@@ -150,7 +152,7 @@ const game = (function () {
   }
 
   function aiMakeMove() {
-    if (getWinner() || !isCurrentPlayerBot()) return;
+    if (!isCurrentPlayerBot()) return;
     const cellId = getBestMove();
 
     setTimeout(() => {
@@ -164,6 +166,7 @@ const game = (function () {
 
   function resetGame() {
     gameBoard.clearState();
+    winningCells = [];
     _currentPlayer = _players.player1.getMarker() === 'X' ? _players.player1 : _players.player2;
     _winner = '';
     _round = 0;
@@ -179,6 +182,10 @@ const game = (function () {
     return _currentPlayer;
   }
 
+  function getWinningCells() {
+    return winningCells;
+  }
+
   return {
     playRound,
     getWinner,
@@ -187,6 +194,7 @@ const game = (function () {
     isCurrentPlayerBot,
     getBestMove,
     aiMakeMove,
+    getWinningCells,
   };
 })();
 
@@ -203,6 +211,7 @@ const screenController = (function () {
   );
 
   function handleCellChange(cellId) {
+    if (game.getWinner()) return;
     game.playRound(cellId);
     updateScreen();
   }
@@ -219,6 +228,12 @@ const screenController = (function () {
     });
 
     if (game.getWinner()) {
+      boardCells.forEach((cell) => {
+        if (game.getWinningCells().includes(+cell.dataset.cellid)) {
+          cell.classList.add('winning-cell');
+        }
+      });
+
       //zde se bude zapínat popup místo opakovaného resetu hry
       setTimeout(() => {
         game.resetGame();
@@ -226,8 +241,9 @@ const screenController = (function () {
         boardCells.forEach((cell, index) => {
           cell.dataset.marker = gameBoard.getBoardState()[index];
           cell.dataset.currentmarker = game.getCurrentPlayer().getMarker();
+          cell.classList.remove('winning-cell');
         });
-      }, 1000);
+      }, 1500);
     }
   }
 
