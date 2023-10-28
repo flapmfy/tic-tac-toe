@@ -160,9 +160,6 @@ h1 {
   }
 }
 
-.cell[data-marker='']:active {
-}
-
 .cell[data-marker='']:hover {
   background-color: rgba(240, 240, 240, 0.145);
 }
@@ -182,22 +179,9 @@ h1 {
   content: 'X';
 }
 
-.cell[data-marker='O'] {
-  color: var(--clr-orange-400);
-}
-
-.cell[data-marker='O']::before {
-  content: 'O';
-}
-
 [data-marker=''][data-currentmarker='X']:hover::before {
   content: 'X';
   color: var(--clr-green-300);
-}
-
-[data-marker=''][data-currentmarker='O']:hover::before {
-  content: 'O';
-  color: var(--clr-orange-300);
 }
 
 .winning-cell-X {
@@ -206,6 +190,19 @@ h1 {
 
 .winning-cell-X::before {
   color: var(--clr-green-800);
+}
+
+.cell[data-marker='O'] {
+  color: var(--clr-orange-400);
+}
+
+.cell[data-marker='O']::before {
+  content: 'O';
+}
+
+[data-marker=''][data-currentmarker='O']:hover::before {
+  content: 'O';
+  color: var(--clr-orange-300);
 }
 
 .winning-cell-O {
