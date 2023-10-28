@@ -76,9 +76,10 @@ const game = (function () {
   let winningCells = [];
   let _round = 0;
   let _winner;
+  let _drawCount = 0;
   const _players = {
-    player1: player('X - bot', 'X'),
-    player2: player('O - player', 'O'),
+    player1: player('X - player', 'X'),
+    player2: player('O - bot', 'O'),
   };
   let _currentPlayer = _players.player1.getMarker() === 'X' ? _players.player1 : _players.player2;
 
@@ -89,8 +90,10 @@ const game = (function () {
 
     if (checkWin()) {
       handleWin();
+      return;
     } else if (!checkWin() && _round === 9) {
       handleDraw();
+      return;
     }
 
     _currentPlayer = _currentPlayer === _players.player1 ? _players.player2 : _players.player1;
@@ -131,13 +134,14 @@ const game = (function () {
   }
 
   function handleWin() {
-    _winner = _currentPlayer.getName();
+    _winner = _currentPlayer;
     _currentPlayer.upScore();
     console.log(`${_winner} wins the round! Current score: ${_currentPlayer.getScore()}`); //will be deleted
   }
 
   function handleDraw() {
     _winner = 'draw';
+    _drawCount++;
     console.log('draw'); //will be deleted
   }
 
@@ -186,6 +190,18 @@ const game = (function () {
     return winningCells;
   }
 
+  function getDrawCount() {
+    return _drawCount;
+  }
+
+  function getXPlayer() {
+    return _players.player1.getMarker() === 'X' ? _players.player1 : _players.player2;
+  }
+
+  function getOPlayer() {
+    return _players.player1.getMarker() === 'O' ? _players.player1 : _players.player2;
+  }
+
   return {
     playRound,
     getWinner,
@@ -195,12 +211,23 @@ const game = (function () {
     getBestMove,
     aiMakeMove,
     getWinningCells,
+    getDrawCount,
+    getOPlayer,
+    getXPlayer,
   };
 })();
 
 //****************************************screenController module****************************************//
 const screenController = (function () {
   const boardCells = document.querySelectorAll('.cell');
+
+  const XplayerWinCount = document.querySelector('[data-Xplayer-wins]');
+  const XplayerName = document.querySelector('[data-Xplayer-name]');
+
+  const OplayerWinCount = document.querySelector('[data-Oplayer-wins]');
+  const OplayerName = document.querySelector('[data-Oplayer-name]');
+
+  const drawCount = document.querySelector('[data-draw-wins]');
 
   boardCells.forEach((cell) =>
     cell.addEventListener('click', () => {
@@ -209,6 +236,17 @@ const screenController = (function () {
       game.aiMakeMove();
     })
   );
+
+  function updateScore() {
+    XplayerWinCount.innerText = game.getXPlayer().getScore();
+    OplayerWinCount.innerText = game.getOPlayer().getScore();
+    drawCount.innerText = game.getDrawCount();
+  }
+
+  function setPlayerNames() {
+    XplayerName.innerText = game.getXPlayer().getName();
+    OplayerName.innerText = game.getOPlayer().getName();
+  }
 
   function handleCellChange(cellId) {
     if (game.getWinner()) return;
@@ -228,6 +266,7 @@ const screenController = (function () {
     });
 
     if (game.getWinner()) {
+      updateScore();
       restartGame();
     }
   }
@@ -235,7 +274,7 @@ const screenController = (function () {
   function restartGame() {
     boardCells.forEach((cell) => {
       if (game.getWinningCells().includes(+cell.dataset.cellid)) {
-        cell.classList.add('winning-cell');
+        cell.classList.add(`winning-cell-${game.getWinner().getMarker()}`);
       }
     });
 
@@ -252,7 +291,8 @@ const screenController = (function () {
           cell.dataset.currentmarker = '';
         }
 
-        cell.classList.remove('winning-cell');
+        cell.classList.remove(`winning-cell-X`);
+        cell.classList.remove(`winning-cell-O`);
       });
     }, 1500);
   }
@@ -260,12 +300,14 @@ const screenController = (function () {
   return {
     handleCellChange,
     updateScreen,
+    setPlayerNames,
   };
 })();
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
 document.addEventListener('DOMContentLoaded', () => {
+  screenController.setPlayerNames();
   screenController.updateScreen();
 
   if (game.isCurrentPlayerBot()) {
