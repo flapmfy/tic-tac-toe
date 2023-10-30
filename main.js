@@ -1,7 +1,7 @@
 //****************************************player module****************************************//
-function player(name, marker) {
-  let _name = name;
+function player(marker, role) {
   let _marker = marker;
+  let _role = role;
   let _score = 0;
 
   function getMarker() {
@@ -9,15 +9,11 @@ function player(name, marker) {
   }
 
   function getName() {
-    return _name;
+    return `${_marker} - ${_role}`;
   }
 
   function setMarker(newMarker) {
     _marker = newMarker;
-  }
-
-  function setName(newName) {
-    _name = newName;
   }
 
   function upScore() {
@@ -33,18 +29,22 @@ function player(name, marker) {
   }
 
   function isBot() {
-    return _name.includes('bot');
+    return _role === 'bot';
+  }
+
+  function getRole() {
+    return _role;
   }
 
   return {
     getMarker,
     setMarker,
     getName,
-    setName,
     upScore,
     resetScore,
     getScore,
     isBot,
+    getRole,
   };
 }
 
@@ -95,8 +95,8 @@ const game = (function () {
   let _winner;
   let _drawCount = 0;
   const _players = {
-    player1: player('X - player', 'X'),
-    player2: player('O - bot', 'O'),
+    player1: player('X', 'player'),
+    player2: player('O', 'bot'),
   };
   let _currentPlayer = _players.player1.getMarker() === 'X' ? _players.player1 : _players.player2;
 
@@ -266,7 +266,7 @@ const screenController = (function () {
     OplayerName.innerText = game.getOPlayer().getName();
   }
 
-  function setCurrentPlayerName() {
+  function setTurnName() {
     currentTurn.innerText = game.getCurrentPlayer().getName();
   }
 
@@ -289,15 +289,28 @@ const screenController = (function () {
 
     if (game.getWinner()) {
       updateScore();
-      resetWithHiglight();
+      endRound();
     }
 
-    setCurrentPlayerName();
+    setTurnName();
+  }
+
+  function endRound() {
+    //highlights winning cells
+    boardCells.forEach((cell) => {
+      if (game.getWinningCells().includes(+cell.dataset.cellid)) {
+        cell.classList.add(`winning-cell-${game.getWinner().getMarker()}`);
+      }
+    });
+
+    setTimeout(() => {
+      showWinScreen();
+    }, 1500);
   }
 
   function reset() {
     game.resetGame();
-    setCurrentPlayerName();
+    setTurnName();
 
     boardCells.forEach((cell, index) => {
       cell.dataset.marker = gameBoard.getBoardState()[index];
@@ -308,21 +321,10 @@ const screenController = (function () {
         cell.dataset.currentmarker = '';
       }
 
+      //removes highlighting on cells
       cell.classList.remove(`winning-cell-X`);
       cell.classList.remove(`winning-cell-O`);
     });
-  }
-
-  function resetWithHiglight() {
-    boardCells.forEach((cell) => {
-      if (game.getWinningCells().includes(+cell.dataset.cellid)) {
-        cell.classList.add(`winning-cell-${game.getWinner().getMarker()}`);
-      }
-    });
-
-    setTimeout(() => {
-      showWinScreen();
-    }, 1500);
   }
 
   function showWinScreen() {
