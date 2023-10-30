@@ -32,6 +32,10 @@ function player(name, marker) {
     return _score;
   }
 
+  function isBot() {
+    return _name.includes('bot');
+  }
+
   return {
     getMarker,
     setMarker,
@@ -40,6 +44,7 @@ function player(name, marker) {
     upScore,
     resetScore,
     getScore,
+    isBot,
   };
 }
 
@@ -63,18 +68,30 @@ const gameBoard = (function () {
     _boardState = ['', '', '', '', '', '', '', '', ''];
   }
 
+  function getEmptyCells() {
+    let emptyCells = [];
+
+    _boardState.forEach((cell, index) => {
+      if (cell === '') {
+        emptyCells.push(index);
+      }
+    });
+
+    return emptyCells;
+  }
+
   return {
     getBoardState,
     placeMarker,
     isLegalMove,
     clearState,
+    getEmptyCells,
   };
 })();
 
 //****************************************game module****************************************//
 const game = (function () {
   let winningCells = [];
-  let _round = 0;
   let _winner;
   let _drawCount = 0;
   const _players = {
@@ -85,13 +102,12 @@ const game = (function () {
 
   function playRound(cellId) {
     if (!gameBoard.isLegalMove(cellId)) return;
-    _round++;
     gameBoard.placeMarker(_currentPlayer.getMarker(), cellId);
 
-    if (checkWin()) {
+    if (checkWin(gameBoard.getBoardState(), _currentPlayer.getMarker())) {
       handleWin();
       return;
-    } else if (!checkWin() && _round === 9) {
+    } else if (gameBoard.getEmptyCells().length === 0) {
       handleDraw();
       return;
     }
@@ -99,10 +115,8 @@ const game = (function () {
     _currentPlayer = _currentPlayer === _players.player1 ? _players.player2 : _players.player1;
   }
 
-  function checkWin() {
-    if (_round < 5) return;
+  function checkWin(boardState, playerMarker) {
     let winningCellsCount = 0;
-    const boardState = gameBoard.getBoardState();
     const WIN_COMBINATIONS = [
       [0, 1, 2],
       [3, 4, 5],
@@ -118,7 +132,7 @@ const game = (function () {
       winningCellsCount = 0;
 
       for (const position of winCombination) {
-        if (boardState[position] === _currentPlayer.getMarker()) {
+        if (boardState[position] === playerMarker) {
           winningCellsCount++;
         } else {
           break;
@@ -136,13 +150,11 @@ const game = (function () {
   function handleWin() {
     _winner = _currentPlayer;
     _currentPlayer.upScore();
-    console.log(`${_winner} wins the round! Current score: ${_currentPlayer.getScore()}`); //will be deleted
   }
 
   function handleDraw() {
     _winner = 'draw';
     _drawCount++;
-    console.log('draw'); //will be deleted
   }
 
   function getBestMove() {
@@ -165,7 +177,7 @@ const game = (function () {
   }
 
   function isCurrentPlayerBot() {
-    return _currentPlayer.getName().includes('bot');
+    return _currentPlayer.isBot();
   }
 
   function resetGame() {
@@ -173,7 +185,6 @@ const game = (function () {
     winningCells = [];
     _currentPlayer = _players.player1.getMarker() === 'X' ? _players.player1 : _players.player2;
     _winner = '';
-    _round = 0;
 
     aiMakeMove();
   }
@@ -208,7 +219,6 @@ const game = (function () {
     getCurrentPlayer,
     resetGame,
     isCurrentPlayerBot,
-    getBestMove,
     aiMakeMove,
     getWinningCells,
     getDrawCount,
@@ -220,20 +230,28 @@ const game = (function () {
 //****************************************screenController module****************************************//
 const screenController = (function () {
   const boardCells = document.querySelectorAll('.cell');
-
   const XplayerWinCount = document.querySelector('[data-Xplayer-wins]');
   const XplayerName = document.querySelector('[data-Xplayer-name]');
-
   const OplayerWinCount = document.querySelector('[data-Oplayer-wins]');
   const OplayerName = document.querySelector('[data-Oplayer-name]');
-
   const drawCount = document.querySelector('[data-draw-wins]');
+  const resetButtons = document.querySelectorAll('.reset-game');
+  const currentTurn = document.querySelector('[data-currentplayer-name]');
+  const endOfRoundModal = document.querySelector('.end-of-round');
+  const endOfRoundWinnerName = endOfRoundModal.querySelector('[data-game-winner-name]');
 
   boardCells.forEach((cell) =>
     cell.addEventListener('click', () => {
       if (game.isCurrentPlayerBot()) return;
       handleCellChange(cell.dataset.cellid);
       game.aiMakeMove();
+    })
+  );
+
+  resetButtons.forEach((button) =>
+    button.addEventListener('click', () => {
+      endOfRoundModal.close();
+      reset();
     })
   );
 
@@ -248,6 +266,10 @@ const screenController = (function () {
     OplayerName.innerText = game.getOPlayer().getName();
   }
 
+  function setCurrentPlayerName() {
+    currentTurn.innerText = game.getCurrentPlayer().getName();
+  }
+
   function handleCellChange(cellId) {
     if (game.getWinner()) return;
     game.playRound(cellId);
@@ -258,7 +280,7 @@ const screenController = (function () {
     boardCells.forEach((cell, index) => {
       cell.dataset.marker = gameBoard.getBoardState()[index];
 
-      if (!game.isCurrentPlayerBot()) {
+      if (!game.isCurrentPlayerBot() && !game.getWinner()) {
         cell.dataset.currentmarker = game.getCurrentPlayer().getMarker();
       } else {
         cell.dataset.currentmarker = '';
@@ -267,34 +289,55 @@ const screenController = (function () {
 
     if (game.getWinner()) {
       updateScore();
-      restartGame();
+      resetWithHiglight();
     }
+
+    setCurrentPlayerName();
   }
 
-  function restartGame() {
+  function reset() {
+    game.resetGame();
+    setCurrentPlayerName();
+
+    boardCells.forEach((cell, index) => {
+      cell.dataset.marker = gameBoard.getBoardState()[index];
+
+      if (!game.isCurrentPlayerBot()) {
+        cell.dataset.currentmarker = game.getCurrentPlayer().getMarker();
+      } else {
+        cell.dataset.currentmarker = '';
+      }
+
+      cell.classList.remove(`winning-cell-X`);
+      cell.classList.remove(`winning-cell-O`);
+    });
+  }
+
+  function resetWithHiglight() {
     boardCells.forEach((cell) => {
       if (game.getWinningCells().includes(+cell.dataset.cellid)) {
         cell.classList.add(`winning-cell-${game.getWinner().getMarker()}`);
       }
     });
 
-    //zde se bude zapínat popup místo opakovaného resetu hry
     setTimeout(() => {
-      game.resetGame();
-
-      boardCells.forEach((cell, index) => {
-        cell.dataset.marker = gameBoard.getBoardState()[index];
-
-        if (!game.isCurrentPlayerBot()) {
-          cell.dataset.currentmarker = game.getCurrentPlayer().getMarker();
-        } else {
-          cell.dataset.currentmarker = '';
-        }
-
-        cell.classList.remove(`winning-cell-X`);
-        cell.classList.remove(`winning-cell-O`);
-      });
+      showWinScreen();
     }, 1500);
+  }
+
+  function showWinScreen() {
+    if (game.getWinner() === 'draw') {
+      endOfRoundWinnerName.innerText = 'It is a draw';
+      endOfRoundWinnerName.className = 'light-500';
+    } else if (game.getWinner().getMarker() === 'X') {
+      endOfRoundWinnerName.innerText = `${game.getWinner().getName()} wins the round`;
+      endOfRoundWinnerName.className = 'green-400';
+    } else {
+      endOfRoundWinnerName.innerText = `${game.getWinner().getName()} wins the round`;
+      endOfRoundWinnerName.className = 'orange-400';
+    }
+
+    endOfRoundModal.showModal();
   }
 
   return {

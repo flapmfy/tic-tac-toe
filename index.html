@@ -9,8 +9,13 @@
   </head>
   <body>
     <header>
-      <div class="container">
+      <div class="container repel">
         <h1><span class="green-400">X</span><span class="orange-400">O</span></h1>
+        <div class="current-player"><span class="bold" data-currentplayer-name>X</span></div>
+
+        <div>
+          <button class="reset-game button-fill">reset</button>
+        </div>
       </div>
     </header>
 
@@ -44,6 +49,19 @@
         </div>
       </section>
     </main>
+
+    <dialog class="end-of-round">
+      <div class="flex-center flow">
+        <p class="light-500">CONGRATULATIONS!</p>
+
+        <div data-game-winner-name></div>
+
+        <div class="flex-row">
+          <button class="quit button-fill">quit</button>
+          <button class="reset-game button-fill">next round</button>
+        </div>
+      </div>
+    </dialog>
   </body>
 </html>
 

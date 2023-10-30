@@ -92,6 +92,18 @@ select {
   white-space: nowrap;
 }
 
+.flow > * + * {
+  margin-top: var(--flow-gap);
+}
+
+.repel {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: var(--repel-align);
+  gap: 1rem;
+}
+
 .container {
   width: min(100% - 2rem, 55rem);
   margin-inline: auto;
@@ -101,19 +113,89 @@ select {
   color: var(--clr-green-400);
 }
 
+.light-500 {
+  color: var(--clr-light-500);
+}
+
 .orange-400 {
   color: var(--clr-orange-400);
 }
 
+.bold {
+  font-weight: 700;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.flex-row {
+  display: flex;
+  gap: var(--flex-gap);
+}
+
+.flex-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+
 /******styling******/
+button {
+  cursor: pointer;
+  border: none;
+}
+
+.button-fill {
+  background-color: var(--bg-clr);
+  color: var(--clr);
+  padding: 0.5rem 0.75rem;
+  border-radius: 1rem;
+  font-size: 1.4rem;
+  font-weight: bold;
+}
+
+.quit {
+  --clr: var(--clr-green-800);
+  --bg-clr: var(--clr-light-500);
+}
+
+.quit:hover {
+  filter: brightness(1.2);
+}
+
+.reset-game {
+  --clr: var(--clr-green-800);
+  --bg-clr: var(--clr-orange-400);
+}
+
+.reset-game:hover {
+  filter: brightness(1.2);
+}
 
 section {
   margin-block: 3rem;
 }
 
+header {
+  --repel-align: center;
+  padding-block: 1rem;
+}
+
+.current-player {
+  color: var(--clr-light-500);
+  background-color: var(--clr-green-700);
+  font-size: 1.5rem;
+  padding: 1rem;
+
+  border-radius: 1rem;
+}
+
 h1 {
   font-size: 3rem;
   line-height: 1;
+  max-width: fit-content;
 }
 
 .game-board {
@@ -128,7 +210,6 @@ h1 {
 }
 
 .cell {
-  cursor: pointer;
   aspect-ratio: 1 / 1;
   width: 100%;
   line-height: 1;
@@ -249,4 +330,29 @@ h1 {
 .player-name {
   font-weight: 400;
   font-size: 1rem;
+}
+
+.end-of-round {
+  --flow-gap: 1.5rem;
+  --flex-gap: 1.5rem;
+
+  background-color: var(--clr-green-700);
+  min-width: 100vw;
+  padding-block: 3rem;
+  border: none;
+  font-size: 1.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.end-of-round::backdrop {
+  background-color: rgba(0, 0, 0, 0.376);
+}
+
+.end-of-round div > p {
+  font-size: 1rem;
+}
+
+[data-game-winner-name] {
+  font-weight: bold;
 }
