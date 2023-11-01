@@ -1,5 +1,5 @@
-//****************************************player module****************************************//
-function player(marker, role) {
+//****************************************Player module****************************************//
+function Player(marker, role) {
   let _marker = marker;
   let _role = role;
   let _score = 0;
@@ -49,7 +49,7 @@ function player(marker, role) {
 }
 
 //****************************************board module****************************************//
-const gameBoard = (function () {
+const GameBoard = (function () {
   let _boardState = ['', '', '', '', '', '', '', '', ''];
 
   function getBoardState() {
@@ -89,25 +89,26 @@ const gameBoard = (function () {
   };
 })();
 
-//****************************************game module****************************************//
-const game = (function () {
+//****************************************Game module****************************************//
+const Game = (function () {
   let winningCells = [];
   let _winner;
   let _drawCount = 0;
-  const _players = {
-    player1: player('X', 'player'),
-    player2: player('O', 'bot'),
-  };
-  let _currentPlayer = _players.player1.getMarker() === 'X' ? _players.player1 : _players.player2;
+  let _players = {};
+  let _currentPlayer;
+
+  function setCurrentPlayer() {
+    _currentPlayer = _players.player1.getMarker() === 'X' ? _players.player1 : _players.player2;
+  }
 
   function playRound(cellId) {
-    if (!gameBoard.isLegalMove(cellId)) return;
-    gameBoard.placeMarker(_currentPlayer.getMarker(), cellId);
+    if (!GameBoard.isLegalMove(cellId)) return;
+    GameBoard.placeMarker(_currentPlayer.getMarker(), cellId);
 
-    if (checkWin(gameBoard.getBoardState(), _currentPlayer.getMarker())) {
+    if (checkWin(GameBoard.getBoardState(), _currentPlayer.getMarker())) {
       handleWin();
       return;
-    } else if (gameBoard.getEmptyCells().length === 0) {
+    } else if (GameBoard.getEmptyCells().length === 0) {
       handleDraw();
       return;
     }
@@ -162,7 +163,7 @@ const game = (function () {
 
     do {
       randomMove = Math.floor(Math.random() * 9);
-    } while (!gameBoard.isLegalMove(randomMove));
+    } while (!GameBoard.isLegalMove(randomMove));
 
     return randomMove;
   }
@@ -172,7 +173,7 @@ const game = (function () {
     const cellId = getBestMove();
 
     setTimeout(() => {
-      screenController.handleCellChange(cellId);
+      ScreenController.handleCellChange(cellId);
     }, 500);
   }
 
@@ -181,9 +182,9 @@ const game = (function () {
   }
 
   function resetGame() {
-    gameBoard.clearState();
+    GameBoard.clearState();
     winningCells = [];
-    _currentPlayer = _players.player1.getMarker() === 'X' ? _players.player1 : _players.player2;
+    setCurrentPlayer();
     _winner = '';
 
     aiMakeMove();
@@ -213,6 +214,10 @@ const game = (function () {
     return _players.player1.getMarker() === 'O' ? _players.player1 : _players.player2;
   }
 
+  function getPlayers() {
+    return _players;
+  }
+
   return {
     playRound,
     getWinner,
@@ -224,11 +229,13 @@ const game = (function () {
     getDrawCount,
     getOPlayer,
     getXPlayer,
+    getPlayers,
+    setCurrentPlayer,
   };
 })();
 
-//****************************************screenController module****************************************//
-const screenController = (function () {
+//****************************************ScreenController module****************************************//
+const ScreenController = (function () {
   const boardCells = document.querySelectorAll('.cell');
   const XplayerWinCount = document.querySelector('[data-Xplayer-wins]');
   const XplayerName = document.querySelector('[data-Xplayer-name]');
@@ -236,15 +243,19 @@ const screenController = (function () {
   const OplayerName = document.querySelector('[data-Oplayer-name]');
   const drawCount = document.querySelector('[data-draw-wins]');
   const resetButtons = document.querySelectorAll('.reset-game');
+  const quitGameButton = document.querySelector('.quit');
   const currentTurn = document.querySelector('[data-currentplayer-name]');
   const endOfRoundModal = document.querySelector('.end-of-round');
-  const endOfRoundWinnerName = endOfRoundModal.querySelector('[data-game-winner-name]');
+  const endOfRoundWinnerName = endOfRoundModal.querySelector('[data-Game-winner-name]');
+  const gameStartModal = document.querySelector('.game-start');
+  const startGameButton = gameStartModal.querySelector('.start-button');
+  const startForm = document.querySelector('form');
 
   boardCells.forEach((cell) =>
     cell.addEventListener('click', () => {
-      if (game.isCurrentPlayerBot()) return;
+      if (Game.isCurrentPlayerBot()) return;
       handleCellChange(cell.dataset.cellid);
-      game.aiMakeMove();
+      Game.aiMakeMove();
     })
   );
 
@@ -255,39 +266,69 @@ const screenController = (function () {
     })
   );
 
+  document.addEventListener('DOMContentLoaded', () => {
+    showStartScreen();
+  });
+
+  quitGameButton.addEventListener('click', () => {
+    showStartScreen();
+    endOfRoundModal.close();
+    reset();
+  });
+
+  // update next
+  startGameButton.addEventListener('click', () => {
+    const newPlayerMarker = findSelection(startForm, 'marker');
+
+    if (newPlayerMarker === 'X') {
+      Game.getPlayers().player1 = new Player('X', 'player');
+      Game.getPlayers().player2 = new Player('O', 'bot');
+    } else {
+      Game.getPlayers().player1 = new Player('O', 'player');
+      Game.getPlayers().player2 = new Player('X', 'bot');
+    }
+
+    Game.setCurrentPlayer();
+    setupGame();
+  });
+
   function updateScore() {
-    XplayerWinCount.innerText = game.getXPlayer().getScore();
-    OplayerWinCount.innerText = game.getOPlayer().getScore();
-    drawCount.innerText = game.getDrawCount();
+    XplayerWinCount.innerText = Game.getXPlayer().getScore();
+    OplayerWinCount.innerText = Game.getOPlayer().getScore();
+    drawCount.innerText = Game.getDrawCount();
   }
 
-  function setPlayerNames() {
-    XplayerName.innerText = game.getXPlayer().getName();
-    OplayerName.innerText = game.getOPlayer().getName();
+  function setScoreboardNames() {
+    XplayerName.innerText = Game.getXPlayer().getName();
+    OplayerName.innerText = Game.getOPlayer().getName();
   }
 
   function setTurnName() {
-    currentTurn.innerText = game.getCurrentPlayer().getName();
+    currentTurn.innerText = Game.getCurrentPlayer().getName();
   }
 
   function handleCellChange(cellId) {
-    if (game.getWinner()) return;
-    game.playRound(cellId);
+    if (Game.getWinner()) return;
+    Game.playRound(cellId);
     updateScreen();
   }
 
   function updateScreen() {
     boardCells.forEach((cell, index) => {
-      cell.dataset.marker = gameBoard.getBoardState()[index];
+      cell.dataset.marker = GameBoard.getBoardState()[index];
 
-      if (!game.isCurrentPlayerBot() && !game.getWinner()) {
-        cell.dataset.currentmarker = game.getCurrentPlayer().getMarker();
+      if (!Game.isCurrentPlayerBot() && !Game.getWinner()) {
+        cell.dataset.currentmarker = Game.getCurrentPlayer().getMarker();
       } else {
         cell.dataset.currentmarker = '';
       }
+
+      //removes highlighting on cells
+      cell.classList.remove(`winning-cell-X`);
+      cell.classList.remove(`winning-cell-O`);
     });
 
-    if (game.getWinner()) {
+    if (Game.getWinner()) {
       updateScore();
       endRound();
     }
@@ -298,8 +339,8 @@ const screenController = (function () {
   function endRound() {
     //highlights winning cells
     boardCells.forEach((cell) => {
-      if (game.getWinningCells().includes(+cell.dataset.cellid)) {
-        cell.classList.add(`winning-cell-${game.getWinner().getMarker()}`);
+      if (Game.getWinningCells().includes(+cell.dataset.cellid)) {
+        cell.classList.add(`winning-cell-${Game.getWinner().getMarker()}`);
       }
     });
 
@@ -309,54 +350,49 @@ const screenController = (function () {
   }
 
   function reset() {
-    game.resetGame();
-    setTurnName();
-
-    boardCells.forEach((cell, index) => {
-      cell.dataset.marker = gameBoard.getBoardState()[index];
-
-      if (!game.isCurrentPlayerBot()) {
-        cell.dataset.currentmarker = game.getCurrentPlayer().getMarker();
-      } else {
-        cell.dataset.currentmarker = '';
-      }
-
-      //removes highlighting on cells
-      cell.classList.remove(`winning-cell-X`);
-      cell.classList.remove(`winning-cell-O`);
-    });
+    Game.resetGame();
+    updateScreen();
   }
 
   function showWinScreen() {
-    if (game.getWinner() === 'draw') {
+    if (Game.getWinner() === 'draw') {
       endOfRoundWinnerName.innerText = 'It is a draw';
       endOfRoundWinnerName.className = 'light-500';
-    } else if (game.getWinner().getMarker() === 'X') {
-      endOfRoundWinnerName.innerText = `${game.getWinner().getName()} wins the round`;
+    } else if (Game.getWinner().getMarker() === 'X') {
+      endOfRoundWinnerName.innerText = `${Game.getWinner().getName()} wins the round`;
       endOfRoundWinnerName.className = 'green-400';
     } else {
-      endOfRoundWinnerName.innerText = `${game.getWinner().getName()} wins the round`;
+      endOfRoundWinnerName.innerText = `${Game.getWinner().getName()} wins the round`;
       endOfRoundWinnerName.className = 'orange-400';
     }
 
     endOfRoundModal.showModal();
   }
 
+  function setupGame() {
+    setScoreboardNames();
+    updateScreen();
+
+    if (Game.isCurrentPlayerBot()) {
+      Game.aiMakeMove();
+    }
+  }
+
+  function showStartScreen() {
+    gameStartModal.showModal();
+  }
+
+  function findSelection(form, fieldName) {
+    let value = form.querySelector(`input[name=${fieldName}]:checked`).value;
+
+    return value;
+  }
+
   return {
     handleCellChange,
-    updateScreen,
-    setPlayerNames,
+    setupGame,
   };
 })();
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
-
-document.addEventListener('DOMContentLoaded', () => {
-  screenController.setPlayerNames();
-  screenController.updateScreen();
-
-  if (game.isCurrentPlayerBot()) {
-    game.aiMakeMove();
-  }
-});
 

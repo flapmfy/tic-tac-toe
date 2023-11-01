@@ -3,6 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
     <link rel="stylesheet" href="./style.css" />
     <script src="/main.js" defer></script>
     <title>Tic-tac toe</title>
@@ -10,11 +11,11 @@
   <body>
     <header>
       <div class="container repel">
-        <h1><span class="green-400">X</span><span class="orange-400">O</span></h1>
+        <h1 class="logo"><span class="green-400">X</span><span class="orange-400">O</span></h1>
         <div class="current-player"><span class="bold" data-currentplayer-name>X</span></div>
 
         <div>
-          <button class="reset-game button-fill">reset</button>
+          <button class="reset-game button-icon | flex-center"><span class="material-symbols-outlined"> refresh </span></button>
         </div>
       </div>
     </header>
@@ -57,10 +58,32 @@
         <div data-game-winner-name></div>
 
         <div class="flex-row">
-          <button class="quit button-fill">quit</button>
-          <button class="reset-game button-fill">next round</button>
+          <button class="quit button-fill">QUIT</button>
+          <button class="reset-game button-fill">NEXT ROUND</button>
         </div>
       </div>
+    </dialog>
+
+    <dialog class="game-start">
+      <form class="flex-center" method="dialog">
+        <h1 class="logo"><span class="green-400">X</span><span class="orange-400">O</span></h1>
+
+        <div class="inner-form | flex-center flow">
+          <h2>PICK PLAYER 1'S MARKER</h2>
+
+          <div class="button-toggle | flex-row">
+            <input class="visually-hidden" type="radio" name="marker" id="Xmarker" value="X" checked />
+            <label for="Xmarker" aria-label="Play with X marker">X</label>
+
+            <input class="visually-hidden" type="radio" name="marker" value="O" id="Omarker" />
+            <label for="Omarker" aria-label="Play with O marker">O</label>
+          </div>
+
+          <p>REMEMBER: X GOES FIRST</p>
+        </div>
+
+        <button class="button-fill start-button" type="submit">START GAME</button>
+      </form>
     </dialog>
   </body>
 </html>

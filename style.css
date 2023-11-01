@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;700;900&display=swap');
+
 :root {
   --clr-green-800: hsl(199, 32%, 15%);
   --clr-green-700: hsl(198, 36%, 18%);
@@ -9,7 +11,7 @@
   --clr-light-500: hsl(199, 22%, 72%);
   --clr-light-600: rgb(98, 98, 98);
 
-  --shadow: ;
+  --ff-base: 'Montserrat', sans-serif;
 }
 
 /******reset******/
@@ -32,7 +34,7 @@ html:focus-within {
 body {
   min-height: 100vh;
   text-rendering: optimizeSpeed;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  font-family: var(--ff-base);
   background-color: var(--clr-green-800);
 }
 
@@ -93,7 +95,8 @@ select {
 }
 
 .flow > * + * {
-  margin-top: var(--flow-gap);
+  --_flow-gap: var(--fg, 1rem);
+  margin-top: var(--_flow-gap);
 }
 
 .repel {
@@ -131,7 +134,7 @@ select {
 
 .flex-row {
   display: flex;
-  gap: var(--flex-gap);
+  gap: var(--flex-row-gap);
 }
 
 .flex-center {
@@ -142,6 +145,12 @@ select {
 }
 
 /******styling******/
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  font-size: 2rem;
+  color: var(--clr-green-800);
+}
+
 button {
   cursor: pointer;
   border: none;
@@ -150,8 +159,21 @@ button {
 .button-fill {
   background-color: var(--bg-clr);
   color: var(--clr);
-  padding: 0.5rem 0.75rem;
-  border-radius: 1rem;
+  padding: 0.5rem 1.5rem;
+  border-radius: 0.5rem;
+  font-size: 1.4rem;
+  font-weight: bold;
+}
+
+.button-fill:hover {
+  filter: brightness(1.2);
+}
+
+.button-icon {
+  background-color: var(--bg-clr);
+  color: var(--clr);
+  padding: 0.5rem;
+  border-radius: 0.5rem;
   font-size: 1.4rem;
   font-weight: bold;
 }
@@ -192,10 +214,10 @@ header {
   border-radius: 1rem;
 }
 
-h1 {
-  font-size: 3rem;
+.logo {
+  font-size: 2.5rem;
+  font-weight: 700;
   line-height: 1;
-  max-width: fit-content;
 }
 
 .game-board {
@@ -239,10 +261,6 @@ h1 {
     transform: translateY(0rem);
     filter: brightness(1);
   }
-}
-
-.cell[data-marker='']:hover {
-  background-color: rgba(240, 240, 240, 0.145);
 }
 
 .cell[data-marker='X']:valid,
@@ -332,14 +350,17 @@ h1 {
   font-size: 1rem;
 }
 
+dialog {
+  border: none;
+}
+
 .end-of-round {
-  --flow-gap: 1.5rem;
-  --flex-gap: 1.5rem;
+  --fg: 1.5rem;
+  --flex-row-gap: 1.5rem;
 
   background-color: var(--clr-green-700);
   min-width: 100vw;
   padding-block: 3rem;
-  border: none;
   font-size: 1.5rem;
   top: 50%;
   transform: translateY(-50%);
@@ -354,5 +375,70 @@ h1 {
 }
 
 [data-game-winner-name] {
+  font-size: 2rem;
   font-weight: bold;
+}
+
+.game-start {
+  --padding-s: 0.5rem;
+  --padding-l: 2rem;
+
+  min-width: 100vw;
+  min-height: 100vh;
+  font-size: 1rem;
+  background-color: var(--clr-green-800);
+}
+
+.game-start > form > * + * {
+  margin-top: 2rem;
+}
+
+.game-start > form {
+  --bg-clr: var(--clr-orange-400);
+  --clr: var(--clr-green-800);
+  --fg: 1.5rem;
+
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.game-start .inner-form {
+  --flex-row-gap: 1rem;
+
+  color: var(--clr-light-500);
+  background-color: var(--clr-green-700);
+  padding: var(--padding-l);
+  border-radius: 1rem;
+  box-shadow: 0px 8px 11px 0px rgba(0, 0, 0, 0.372);
+}
+
+.game-start h2 {
+  font-size: inherit;
+}
+
+.button-toggle {
+  --radius: 1rem;
+
+  font-size: 3.5rem;
+  font-weight: bold;
+  background-color: var(--clr-green-800);
+  padding: var(--padding-s);
+  border-radius: var(--radius);
+}
+
+.button-toggle input[type='radio'] + label {
+  cursor: pointer;
+  padding: 0rem 4rem;
+  border-radius: calc(var(--radius) - var(--padding-s));
+}
+
+.button-toggle input[type='radio']:checked + label {
+  background-color: var(--clr-light-500);
+  color: var(--clr-green-800);
+}
+
+.button-toggle input[type='radio']:focus + label {
+  outline: 3px solid var(--clr-orange-400);
 }
