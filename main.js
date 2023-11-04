@@ -68,10 +68,10 @@ const GameBoard = (function () {
     _boardState = ['', '', '', '', '', '', '', '', ''];
   }
 
-  function getEmptyCells() {
+  function getEmptyCells(boardState) {
     let emptyCells = [];
 
-    _boardState.forEach((cell, index) => {
+    boardState.forEach((cell, index) => {
       if (cell === '') {
         emptyCells.push(index);
       }
@@ -92,6 +92,7 @@ const GameBoard = (function () {
 //****************************************Game module****************************************//
 const Game = (function () {
   let winningCells = [];
+  let _botDifficulty = 'easy';
   let _winner;
   let _drawCount = 0;
   let _players = {};
@@ -108,7 +109,7 @@ const Game = (function () {
     if (checkWin(GameBoard.getBoardState(), _currentPlayer.getMarker())) {
       handleWin();
       return;
-    } else if (GameBoard.getEmptyCells().length === 0) {
+    } else if (GameBoard.getEmptyCells(GameBoard.getBoardState()).length === 0) {
       handleDraw();
       return;
     }
@@ -158,7 +159,7 @@ const Game = (function () {
     _drawCount++;
   }
 
-  function getBestMove() {
+  function getRandomMove() {
     let randomMove = 0;
 
     do {
@@ -168,9 +169,72 @@ const Game = (function () {
     return randomMove;
   }
 
+  function getBestMove(boardState, player) {
+    const bestPlayInfo = minimax(boardState, player, 0, -Infinity, Infinity);
+    return bestPlayInfo.index;
+  }
+
+  function minimax(boardState, player, depth, alpha, beta) {
+    if (player.isBot() && checkWin(boardState, player.getMarker())) {
+      return { score: 1 };
+    } else if (GameBoard.getEmptyCells(boardState) === 0) {
+      return { score: 0 };
+    } else if (!player.isBot() && checkWin(boardState, player.getMarker())) {
+      return { score: -1 };
+    }
+
+    const emptyCells = GameBoard.getEmptyCells();
+    const allTestPlayInfos = [];
+    let bestTestPlay = null;
+
+    for (let i = 0; i < emptyCells.length; i++) {
+      const currentPlayTestInfo = {};
+
+      currentPlayTestInfo.index = emptyCells[i];
+      boardState[emptyCells[i]] = player.getMarker();
+
+      if (player.isBot()) {
+        const result = minimax(boardState, getXPlayer().isBot() ? getOPlayer() : getXPlayer(), depth + 1, alpha, beta);
+        currentPlayTestInfo.score = result.score - depth;
+        alpha = Math.max(alpha, currentPlayTestInfo.score);
+      } else {
+        const result = minimax(boardState, !getXPlayer().isBot() ? getOPlayer() : getXPlayer(), depth + 1, alpha, beta);
+        currentPlayTestInfo.score = result.score - depth;
+        beta = Math.min(beta, currentPlayTestInfo.score);
+      }
+
+      boardState[emptyCells[i]] = '';
+      allTestPlayInfos.push(currentPlayTestInfo);
+
+      if (alpha < beta) break;
+    }
+
+    if (player.isBot()) {
+      //maximize
+      let bestScore = -Infinity;
+      for (let i = 0; i < allTestPlayInfos.length; i++) {
+        if (allTestPlayInfos[i].score > bestScore) {
+          bestScore = allTestPlayInfos[i].score;
+          bestTestPlay = i;
+        }
+      }
+    } else {
+      //minimize
+      let bestScore = Infinity;
+      for (let i = 0; i < allTestPlayInfos.length; i++) {
+        if (allTestPlayInfos[i].score < bestScore) {
+          bestScore = allTestPlayInfos[i].score;
+          bestTestPlay = i;
+        }
+      }
+    }
+
+    return allTestPlayInfos[bestTestPlay];
+  }
+
   function aiMakeMove() {
     if (!isCurrentPlayerBot()) return;
-    const cellId = getBestMove();
+    const cellId = _botDifficulty === 'easy' ? getRandomMove() : getBestMove(GameBoard.getBoardState(), _currentPlayer);
 
     setTimeout(() => {
       ScreenController.handleCellChange(cellId);
@@ -218,6 +282,10 @@ const Game = (function () {
     return _players;
   }
 
+  function setBotDifficulty(difficulty) {
+    _botDifficulty = difficulty;
+  }
+
   return {
     playRound,
     getWinner,
@@ -231,6 +299,7 @@ const Game = (function () {
     getXPlayer,
     getPlayers,
     setCurrentPlayer,
+    setBotDifficulty,
   };
 })();
 
@@ -393,6 +462,4 @@ const ScreenController = (function () {
     setupGame,
   };
 })();
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////
 
