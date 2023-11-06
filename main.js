@@ -12,16 +12,8 @@ function Player(marker, role) {
     return `${_marker} - ${_role}`;
   }
 
-  function setMarker(newMarker) {
-    _marker = newMarker;
-  }
-
   function upScore() {
     _score++;
-  }
-
-  function resetScore() {
-    _score = 0;
   }
 
   function getScore() {
@@ -32,19 +24,12 @@ function Player(marker, role) {
     return _role === 'bot';
   }
 
-  function getRole() {
-    return _role;
-  }
-
   return {
     getMarker,
-    setMarker,
     getName,
     upScore,
-    resetScore,
     getScore,
     isBot,
-    getRole,
   };
 }
 
@@ -64,7 +49,7 @@ const GameBoard = (function () {
     return _boardState[cellId] === '';
   }
 
-  function clearState() {
+  function clearBoard() {
     _boardState = ['', '', '', '', '', '', '', '', ''];
   }
 
@@ -84,23 +69,19 @@ const GameBoard = (function () {
     getBoardState,
     placeMarker,
     isLegalMove,
-    clearState,
+    clearBoard,
     getEmptyCells,
   };
 })();
 
 //****************************************Game module****************************************//
 const Game = (function () {
+  let _botDifficulty;
   let winningCells = [];
-  let _botDifficulty = 'easy';
   let _winner;
   let _drawCount = 0;
   let _players = {};
   let _currentPlayer;
-
-  function setCurrentPlayer() {
-    _currentPlayer = _players.player1.getMarker() === 'X' ? _players.player1 : _players.player2;
-  }
 
   function playRound(cellId) {
     if (!GameBoard.isLegalMove(cellId)) return;
@@ -206,7 +187,7 @@ const Game = (function () {
       boardState[emptyCells[i]] = '';
       allTestPlayInfos.push(currentPlayTestInfo);
 
-      if (alpha < beta) break;
+      if (beta <= alpha) break;
     }
 
     if (player.isBot()) {
@@ -234,24 +215,59 @@ const Game = (function () {
 
   function aiMakeMove() {
     if (!isCurrentPlayerBot()) return;
-    const cellId = _botDifficulty === 'easy' ? getRandomMove() : getBestMove(GameBoard.getBoardState(), _currentPlayer);
+    let cellId;
+    switch (_botDifficulty) {
+      case 'easy':
+        cellId = getRandomMove();
+        //console.log(getBestMove(GameBoard.getBoardState()), _currentPlayer);
+        break;
+      case 'hard':
+        cellId = getBestMove(GameBoard.getBoardState(), _currentPlayer);
+        break;
+    }
 
     setTimeout(() => {
       ScreenController.handleCellChange(cellId);
     }, 500);
   }
 
-  function isCurrentPlayerBot() {
-    return _currentPlayer.isBot();
+  function setCurrentPlayer() {
+    _currentPlayer = getXPlayer();
   }
 
   function resetGame() {
-    GameBoard.clearState();
+    GameBoard.clearBoard();
     winningCells = [];
     setCurrentPlayer();
     _winner = '';
+  }
 
-    aiMakeMove();
+  function initializePlayers(player1Marker, botDifficulty) {
+    if (botDifficulty) {
+      _botDifficulty = botDifficulty;
+
+      if (player1Marker === 'X') {
+        Game.getPlayers().player1 = new Player('X', 'player');
+        Game.getPlayers().player2 = new Player('O', 'bot');
+      } else {
+        Game.getPlayers().player1 = new Player('O', 'player');
+        Game.getPlayers().player2 = new Player('X', 'bot');
+      }
+    } else {
+      if (player1Marker === 'X') {
+        Game.getPlayers().player1 = new Player('X', 'player');
+        Game.getPlayers().player2 = new Player('O', 'player');
+      } else {
+        Game.getPlayers().player1 = new Player('O', 'player');
+        Game.getPlayers().player2 = new Player('X', 'player');
+      }
+    }
+
+    setCurrentPlayer();
+  }
+
+  function isCurrentPlayerBot() {
+    return _currentPlayer.isBot();
   }
 
   function getWinner() {
@@ -300,6 +316,7 @@ const Game = (function () {
     getPlayers,
     setCurrentPlayer,
     setBotDifficulty,
+    initializePlayers,
   };
 })();
 
@@ -320,6 +337,16 @@ const ScreenController = (function () {
   const startGameButton = gameStartModal.querySelector('.start-button');
   const startForm = document.querySelector('form');
 
+  //start of the game
+  document.addEventListener('DOMContentLoaded', () => {
+    showStartScreen();
+  });
+
+  gameStartModal.addEventListener('keydown', (e) => {
+    e.preventDefault();
+  });
+
+  //board cells initialization
   boardCells.forEach((cell) =>
     cell.addEventListener('click', () => {
       if (Game.isCurrentPlayerBot()) return;
@@ -328,39 +355,32 @@ const ScreenController = (function () {
     })
   );
 
+  //reset buttons initialization
   resetButtons.forEach((button) =>
     button.addEventListener('click', () => {
       endOfRoundModal.close();
-      reset();
+      resetGame();
+      setupGame();
     })
   );
 
-  document.addEventListener('DOMContentLoaded', () => {
-    showStartScreen();
-  });
-
+  //quit game button initialization
   quitGameButton.addEventListener('click', () => {
     showStartScreen();
     endOfRoundModal.close();
-    reset();
+    resetGame();
   });
 
-  // update next
+  //start game button initialization
   startGameButton.addEventListener('click', () => {
     const newPlayerMarker = findSelection(startForm, 'marker');
+    const gameDifficulty = 'easy';
 
-    if (newPlayerMarker === 'X') {
-      Game.getPlayers().player1 = new Player('X', 'player');
-      Game.getPlayers().player2 = new Player('O', 'bot');
-    } else {
-      Game.getPlayers().player1 = new Player('O', 'player');
-      Game.getPlayers().player2 = new Player('X', 'bot');
-    }
-
-    Game.setCurrentPlayer();
+    Game.initializePlayers(newPlayerMarker, gameDifficulty);
     setupGame();
   });
 
+  //**************************************/
   function updateScore() {
     XplayerWinCount.innerText = Game.getXPlayer().getScore();
     OplayerWinCount.innerText = Game.getOPlayer().getScore();
@@ -418,11 +438,6 @@ const ScreenController = (function () {
     }, 1500);
   }
 
-  function reset() {
-    Game.resetGame();
-    updateScreen();
-  }
-
   function showWinScreen() {
     if (Game.getWinner() === 'draw') {
       endOfRoundWinnerName.innerText = 'It is a draw';
@@ -436,6 +451,11 @@ const ScreenController = (function () {
     }
 
     endOfRoundModal.showModal();
+  }
+
+  function resetGame() {
+    Game.resetGame();
+    updateScreen();
   }
 
   function setupGame() {
@@ -453,13 +473,11 @@ const ScreenController = (function () {
 
   function findSelection(form, fieldName) {
     let value = form.querySelector(`input[name=${fieldName}]:checked`).value;
-
     return value;
   }
 
   return {
     handleCellChange,
-    setupGame,
   };
 })();
 
