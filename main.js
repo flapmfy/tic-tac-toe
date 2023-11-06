@@ -91,6 +91,7 @@ const Game = (function () {
       handleWin();
       return;
     } else if (GameBoard.getEmptyCells(GameBoard.getBoardState()).length === 0) {
+      console.log('Draw found');
       handleDraw();
       return;
     }
@@ -150,21 +151,21 @@ const Game = (function () {
     return randomMove;
   }
 
-  function getBestMove(boardState, player) {
-    const bestPlayInfo = minimax(boardState, player, 0, -Infinity, Infinity);
+  function getBestMove(currentBoardState, botPlayer) {
+    const bestPlayInfo = minimax(currentBoardState, botPlayer, 0, -Infinity, Infinity);
     return bestPlayInfo.index;
   }
 
   function minimax(boardState, player, depth, alpha, beta) {
     if (player.isBot() && checkWin(boardState, player.getMarker())) {
       return { score: 1 };
-    } else if (GameBoard.getEmptyCells(boardState) === 0) {
+    } else if (GameBoard.getEmptyCells(boardState).length === 0) {
       return { score: 0 };
     } else if (!player.isBot() && checkWin(boardState, player.getMarker())) {
       return { score: -1 };
     }
 
-    const emptyCells = GameBoard.getEmptyCells();
+    const emptyCells = GameBoard.getEmptyCells(boardState);
     const allTestPlayInfos = [];
     let bestTestPlay = null;
 
@@ -176,18 +177,18 @@ const Game = (function () {
 
       if (player.isBot()) {
         const result = minimax(boardState, getXPlayer().isBot() ? getOPlayer() : getXPlayer(), depth + 1, alpha, beta);
-        currentPlayTestInfo.score = result.score - depth;
-        alpha = Math.max(alpha, currentPlayTestInfo.score);
+        currentPlayTestInfo.score = result.score;
+        //alpha = Math.max(alpha, currentPlayTestInfo.score);
       } else {
         const result = minimax(boardState, !getXPlayer().isBot() ? getOPlayer() : getXPlayer(), depth + 1, alpha, beta);
-        currentPlayTestInfo.score = result.score - depth;
-        beta = Math.min(beta, currentPlayTestInfo.score);
+        currentPlayTestInfo.score = result.score;
+        //beta = Math.min(beta, currentPlayTestInfo.score);
       }
 
       boardState[emptyCells[i]] = '';
       allTestPlayInfos.push(currentPlayTestInfo);
 
-      if (beta <= alpha) break;
+      //if (beta <= alpha) break;
     }
 
     if (player.isBot()) {
@@ -219,7 +220,6 @@ const Game = (function () {
     switch (_botDifficulty) {
       case 'easy':
         cellId = getRandomMove();
-        //console.log(getBestMove(GameBoard.getBoardState()), _currentPlayer);
         break;
       case 'hard':
         cellId = getBestMove(GameBoard.getBoardState(), _currentPlayer);
@@ -374,7 +374,7 @@ const ScreenController = (function () {
   //start game button initialization
   startGameButton.addEventListener('click', () => {
     const newPlayerMarker = findSelection(startForm, 'marker');
-    const gameDifficulty = 'easy';
+    const gameDifficulty = 'hard';
 
     Game.initializePlayers(newPlayerMarker, gameDifficulty);
     setupGame();
@@ -428,7 +428,7 @@ const ScreenController = (function () {
   function endRound() {
     //highlights winning cells
     boardCells.forEach((cell) => {
-      if (Game.getWinningCells().includes(+cell.dataset.cellid)) {
+      if (Game.getWinningCells().includes(+cell.dataset.cellid) && Game.getWinner() !== 'draw') {
         cell.classList.add(`winning-cell-${Game.getWinner().getMarker()}`);
       }
     });
