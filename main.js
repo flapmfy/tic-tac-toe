@@ -91,7 +91,6 @@ const Game = (function () {
       handleWin();
       return;
     } else if (GameBoard.getEmptyCells(GameBoard.getBoardState()).length === 0) {
-      console.log('Draw found');
       handleDraw();
       return;
     }
@@ -114,6 +113,7 @@ const Game = (function () {
 
     for (const winCombination of WIN_COMBINATIONS) {
       winningCellsCount = 0;
+      winningCells = [];
 
       for (const position of winCombination) {
         if (boardState[position] === playerMarker) {
@@ -427,8 +427,9 @@ const ScreenController = (function () {
 
   function endRound() {
     //highlights winning cells
+    console.log(Game.getWinningCells());
     boardCells.forEach((cell) => {
-      if (Game.getWinningCells().includes(+cell.dataset.cellid) && Game.getWinner() !== 'draw') {
+      if (Game.getWinningCells().includes(+cell.dataset.cellid)) {
         cell.classList.add(`winning-cell-${Game.getWinner().getMarker()}`);
       }
     });
