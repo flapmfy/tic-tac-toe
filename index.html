@@ -71,12 +71,25 @@
         <div class="inner-form | flex-center flow">
           <h2>PICK PLAYER 1'S MARKER</h2>
 
-          <div class="button-toggle | flex-row">
+          <div class="button-toggle start-marker-toggle | flex-row">
             <input class="visually-hidden" type="radio" name="marker" id="Xmarker" value="X" checked />
             <label for="Xmarker" aria-label="Play with X marker">X</label>
 
             <input class="visually-hidden" type="radio" name="marker" value="O" id="Omarker" />
             <label for="Omarker" aria-label="Play with O marker">O</label>
+          </div>
+
+          <h2>PICK GAME MODE</h2>
+
+          <div class="button-toggle difficulty-toggle | flex-row">
+            <input class="visually-hidden" type="radio" name="difficulty" id="no-bot" value="" checked />
+            <label for="no-bot" aria-label="Play with X marker"><span class="material-symbols-outlined"> sports_kabaddi </span></label>
+
+            <input class="visually-hidden" type="radio" name="difficulty" value="easy" id="easy-bot" />
+            <label for="easy-bot" aria-label="Play against easy bot"><span class="material-symbols-outlined"> smart_toy </span></label>
+
+            <input class="visually-hidden" type="radio" name="difficulty" value="hard" id="hard-bot" />
+            <label for="hard-bot" aria-label="Play against hard bot"><span class="material-symbols-outlined"> robot </span></label>
           </div>
 
           <p>REMEMBER: X GOES FIRST</p>

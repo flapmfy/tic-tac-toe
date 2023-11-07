@@ -7,6 +7,7 @@
   --clr-green-300: hsl(179, 25%, 69%);
   --clr-orange-400: hsl(39, 88%, 58%);
   --clr-orange-300: hsl(39, 59%, 72%);
+  --clr-red-400: hsl(0, 67%, 43%);
 
   --clr-light-500: hsl(199, 22%, 72%);
   --clr-light-600: rgb(98, 98, 98);
@@ -146,9 +147,10 @@ select {
 
 /******styling******/
 .material-symbols-outlined {
+  --symbol-color: var(--symbol-clr, var(--clr-green-800));
   font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
   font-size: 2rem;
-  color: var(--clr-green-800);
+  color: var(--symbol-color);
 }
 
 button {
@@ -419,26 +421,64 @@ dialog {
 }
 
 .button-toggle {
-  --radius: 1rem;
-
-  font-size: 3.5rem;
   font-weight: bold;
   background-color: var(--clr-green-800);
-  padding: var(--padding-s);
-  border-radius: var(--radius);
 }
 
 .button-toggle input[type='radio'] + label {
   cursor: pointer;
-  padding: 0rem 4rem;
   border-radius: calc(var(--radius) - var(--padding-s));
 }
 
-.button-toggle input[type='radio']:checked + label {
+.start-marker-toggle input[type='radio'] + label {
+  padding: 0rem 1.25em;
+}
+
+.start-marker-toggle input[type='radio']:checked + label {
   background-color: var(--clr-light-500);
   color: var(--clr-green-800);
 }
 
-.button-toggle input[type='radio']:focus + label {
+.start-marker-toggle input[type='radio']:focus + label {
+  outline: 3px solid var(--clr-orange-400);
+}
+
+.start-marker-toggle {
+  --radius: 1rem;
+
+  font-size: 3.5rem;
+  padding: var(--padding-s);
+  border-radius: var(--radius);
+}
+
+.difficulty-toggle {
+  --radius: 1rem;
+
+  padding: var(--padding-s);
+  border-radius: var(--radius);
+}
+
+#no-bot + label {
+  --symbol-clr: var(--clr-light-500);
+}
+
+#easy-bot + label {
+  --symbol-clr: var(--clr-green-400);
+}
+
+#hard-bot + label {
+  --symbol-clr: var(--clr-red-400);
+}
+
+.difficulty-toggle input[type='radio'] + label {
+  padding: 0.2rem 0.4rem;
+}
+
+.difficulty-toggle input[type='radio']:checked + label {
+  --symbol-clr: var(--clr-green-800);
+  outline: 3px solid var(--clr-orange-400);
+}
+
+.difficulty-toggle input[type='radio']:focus + label {
   outline: 3px solid var(--clr-orange-400);
 }

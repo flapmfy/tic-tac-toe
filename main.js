@@ -374,7 +374,7 @@ const ScreenController = (function () {
   //start game button initialization
   startGameButton.addEventListener('click', () => {
     const newPlayerMarker = findSelection(startForm, 'marker');
-    const gameDifficulty = 'hard';
+    const gameDifficulty = findSelection(startForm, 'difficulty');
 
     Game.initializePlayers(newPlayerMarker, gameDifficulty);
     setupGame();
@@ -427,7 +427,6 @@ const ScreenController = (function () {
 
   function endRound() {
     //highlights winning cells
-    console.log(Game.getWinningCells());
     boardCells.forEach((cell) => {
       if (Game.getWinningCells().includes(+cell.dataset.cellid)) {
         cell.classList.add(`winning-cell-${Game.getWinner().getMarker()}`);
