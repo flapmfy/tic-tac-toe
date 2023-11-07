@@ -398,12 +398,18 @@ dialog {
 .game-start > form {
   --bg-clr: var(--clr-orange-400);
   --clr: var(--clr-green-800);
-  --fg: 1.5rem;
+  --fg: 1.25rem;
 
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
+}
+
+.game-start .form-wrapper {
+  text-align: center;
+  display: grid;
+  gap: 0.5rem;
 }
 
 .game-start .inner-form {
